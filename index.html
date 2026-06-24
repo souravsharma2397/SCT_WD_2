@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Stopwatch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a24;
+            color: #ffffff;
+        }
+        .stopwatch-container {
+            background: #252538;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 380px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #00adb5;
+            letter-spacing: 1px;
+        }
+        .time-display {
+            font-size: 3rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            font-variant-numeric: tabular-nums;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s ease, opacity 0.2s ease;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .start { background-color: #4caf50; color: white; }
+        .pause { background-color: #ff9800; color: white; }
+        .lap { background-color: #00adb5; color: white; }
+        .reset { background-color: #f44336; color: white; }
+        .btn:hover:not(:disabled) { filter: brightness(1.15); }
+        .laps-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #383854;
+            padding-top: 15px;
+            text-align: left;
+        }
+        .laps-container h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #aaaaee;
+        }
+        #lapsList { list-style: none; }
+        #lapsList li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 5px;
+            border-bottom: 1px solid #2e2e42;
+            font-size: 0.95rem;
+        }
+        #lapsList li span { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body>
+
+    <div class="stopwatch-container">
+        <h1>Stopwatch</h1>
+        <div class="time-display" id="display">00:00:00.00</div>
+        <div class="controls">
+            <button id="startPauseBtn" class="btn start">Start</button>
+            <button id="lapBtn" class="btn lap" disabled>Lap</button>
+            <button id="resetBtn" class="btn reset">Reset</button>
+        </div>
+        <div class="laps-container">
+            <h3>Lap Times</h3>
+            <ul id="lapsList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const startPauseBtn = document.getElementById('startPauseBtn');
+        const lapBtn = document.getElementById('lapBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const lapsList = document.getElementById('lapsList');
+
+        let isRunning = false;
+        let timerInterval = null;
+        let totalMilliseconds = 0;
+        let lapCount = 0;
+
+        function formatTime(totalMs) {
+            let hours = Math.floor(totalMs / 360000);
+            let minutes = Math.floor((totalMs % 360000) / 6000);
+            let seconds = Math.floor((totalMs % 6000) / 100);
+            let centiseconds = totalMs % 100;
+
+            let hDisplay = hours < 10 ? "0" + hours : hours;
+            let mDisplay = minutes < 10 ? "0" + minutes : minutes;
+            let sDisplay = seconds < 10 ? "0" + seconds : seconds;
+            let cDisplay = centiseconds < 10 ? "0" + centiseconds : centiseconds;
+
+            return `${hDisplay}:${mDisplay}:${sDisplay}.${cDisplay}`;
+        }
+
+        function toggleStartPause() {
+            if (!isRunning) {
+                isRunning = true;
+                startPauseBtn.textContent = 'Pause';
+                startPauseBtn.className = 'btn pause';
+                lapBtn.disabled = false;
+
+                timerInterval = setInterval(() => {
+                    totalMilliseconds++;
+                    display.textContent = formatTime(totalMilliseconds);
+                }, 10); // Updates every 10 milliseconds
+            } else {
+                isRunning = false;
+                startPauseBtn.textContent = 'Start';
+                startPauseBtn.className = 'btn start';
+                lapBtn.disabled = true;
+                clearInterval(timerInterval);
+            }
+        }
+
+        function recordLap() {
+            if (isRunning) {
+                lapCount++;
+                const currentLapTime = formatTime(totalMilliseconds);
+                const li = document.createElement('li');
+                li.innerHTML = `<span>Lap ${lapCount}</span> <span>${currentLapTime}</span>`;
+                lapsList.insertBefore(li, lapsList.firstChild);
+            }
+        }
+
+        function resetStopwatch() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            totalMilliseconds = 0;
+            lapCount = 0;
+            display.textContent = "00:00:00.00";
+            startPauseBtn.textContent = 'Start';
+            startPauseBtn.className = 'btn start';
+            lapBtn.disabled = true;
+            lapsList.innerHTML = '';
+        }
+
+        startPauseBtn.addEventListener('click', toggleStartPause);
+        lapBtn.addEventListener('click', recordLap);
+        resetBtn.addEventListener('click', resetStopwatch);
+    </script>
+</body>
+</html>
